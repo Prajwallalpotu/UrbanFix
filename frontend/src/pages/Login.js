@@ -22,6 +22,14 @@ const Login = () => {
             return;
         }
 
+        // Hardcoded admin login
+        if (username === "admin" && password === "admin") {
+            localStorage.setItem("user_id", "admin");
+            navigate("/profile");
+            return;
+        }
+
+        // Normal login via backend
         try {
             const res = await axios.post("http://localhost:5001/auth/login", { username, password });
             localStorage.setItem("user_id", res.data.user_id);

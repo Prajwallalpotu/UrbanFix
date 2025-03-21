@@ -16,6 +16,11 @@ const Profile = () => {
         }
     }, []);
 
+    const handleLogout = () => {
+        localStorage.removeItem("user_id");
+        window.location.href = "/login";
+    };
+
     return (
         <Layout>
             <div className="profile-container">
@@ -24,6 +29,20 @@ const Profile = () => {
                         <h2>Welcome, {profile.name}</h2>
                         <p><strong>User ID:</strong> {profile.user_id}</p>
                         <p><strong>Role:</strong> {profile.role}</p>
+                        <button 
+                            onClick={handleLogout} 
+                            style={{ 
+                                padding: "10px 20px", 
+                                backgroundColor: "#f44336", 
+                                color: "#fff", 
+                                border: "none", 
+                                borderRadius: "5px", 
+                                cursor: "pointer",
+                                marginTop: "20px"
+                            }}
+                        >
+                            Logout
+                        </button>
                     </>
                 ) : (
                     <p>Loading profile...</p>
