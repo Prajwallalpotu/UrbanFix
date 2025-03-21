@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { TextField, Button, Container, Typography, Box, Alert } from "@mui/material";
@@ -8,6 +8,13 @@ const Login = () => {
     const [password, setPassword] = useState("");
     const [errorMsg, setErrorMsg] = useState("");
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const userId = localStorage.getItem("user_id");
+        if (userId) {
+            navigate("/profile");
+        }
+    }, [navigate]);
 
     const login = async () => {
         if (!username || !password) {
