@@ -4,6 +4,8 @@ import Layout from "../components/Layout";
 import EditIcon from "@mui/icons-material/Edit";
 import Box from "@mui/material/Box";
 
+const backendURL = process.env.REACT_APP_BACKEND_URL
+
 const Profile = () => {
     const [profile, setProfile] = useState(null);
 
@@ -12,7 +14,7 @@ const Profile = () => {
         if (!user_id) {
             window.location.href = "/login";
         } else {
-            axios.get(`http://localhost:5001/user/profile/${user_id}`)
+            axios.get(`${backendURL}/user/profile/${user_id}`)
                 .then(res => setProfile(res.data))
                 .catch(err => console.error("Error fetching profile:", err));
         }

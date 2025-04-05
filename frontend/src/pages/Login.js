@@ -3,6 +3,8 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { TextField, Button, Container, Typography, Box, Alert } from "@mui/material";
 
+const backendURL = process.env.REACT_APP_BACKEND_URL
+
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -13,7 +15,7 @@ const Login = () => {
         const userId = localStorage.getItem("user_id");
     
         if (userId && userId !== "admin") {
-            axios.get(`http://localhost:5001/user/profile/${userId}`)
+            axios.get(`${backendURL}/user/profile/${userId}`)
                 .then(() => navigate("/profile"))
                 .catch(() => {
                     // Invalid user_id, remove and stay on login
@@ -32,7 +34,7 @@ const Login = () => {
         }
 
         try {
-            const res = await axios.post("http://localhost:5001/auth/login", { email, password });
+            const res = await axios.post(`${backendURL}/auth/login`, { email, password });
             localStorage.setItem("user_id", res.data.user_id);
             navigate("/profile");
         } catch (error) {
