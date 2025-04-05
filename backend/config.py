@@ -15,7 +15,7 @@ class Config:
     os.makedirs(UPLOAD_DIR, exist_ok=True)
 
     # MongoDB Connection
-    MONGO_URI = "mongodb://localhost:27017"
+    MONGO_URI = os.getenv('MONGO_URI')  # Use MONGO_URI from .env
     DB_NAME = "UrbanFix"
     client = MongoClient(MONGO_URI)
     db = client[DB_NAME]

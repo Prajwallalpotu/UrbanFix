@@ -1,7 +1,8 @@
+import os
 from pymongo import MongoClient
 
 # MongoDB connection details
-MONGO_URI = "mongodb://localhost:27017"
+MONGO_URI = os.getenv('MONGO_URI')  # Use MONGO_URI from .env
 DB_NAME = "UrbanFix"
 
 # Initialize MongoDB client and database
