@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_folder='../frontend/build', static_url_path='')
 
+
 CORS(app)
 
 # Register Blueprints
@@ -43,10 +44,10 @@ def serve(path):
         return send_from_directory(app.static_folder, 'index.html')
 
 if __name__ == '__main__':
-    build_dir = 'pothole-detection/build'
+    build_dir = 'frontend/build'
     if not os.path.exists(build_dir):
         logger.warning(f"Build directory {build_dir} not found. The React app may need to be built first.")
     
     port = int(os.environ.get("PORT", 5001))
-    logger.info(f"Starting server on port {port}")
     app.run(host='0.0.0.0', port=port, debug=True)
+
