@@ -61,7 +61,7 @@ function Track() {
                         return (
                             <Paper key={index} sx={{ p: 3, mb: 3, boxShadow: 3 }}>
                                 <Typography variant="h6" sx={{ mb: 1 }}>
-                                    Complaint ID: {complaint.complaint_id}
+                                <strong>Complaint ID:</strong> {complaint.complaint_id}
                                 </Typography>
                                 <Typography variant="body2" sx={{ mb: 1 }}>
                                     <strong>Latitude:</strong> {complaint.latitude}

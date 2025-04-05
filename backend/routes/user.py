@@ -46,13 +46,13 @@ def update_profile(user_id):
         return jsonify({"message": "Profile updated successfully."}), 200
     except Exception as e:
         return jsonify({"message": str(e)}), 500
-
+    
 @user_bp.route("/user/complaints/<user_id>", methods=["GET"])
 def get_complaints(user_id):
     try:
         user = users_collection.find_one({"user_id": user_id}, {"_id": 0, "complaints": 1})
-        if not user or "complaints" not in user:
-            return jsonify({"message": "No complaints found"}), 404
+        if not user or "complaints" not in user or not user["complaints"]:
+            return jsonify({"message": "No complaints yet"}), 200
         return jsonify({"complaints": user["complaints"]}), 200
     except Exception as e:
-        return jsonify({"message": str(e)}), 500
+        return jsonify({"message": "Error in fetching data: " + str(e)}), 500
