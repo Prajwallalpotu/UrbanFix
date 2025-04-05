@@ -104,7 +104,19 @@ const Upload = () => {
         };
 
         try {
-            await axios.post(`${backendURL}/send-email`, emailData);
+            const userId = localStorage.getItem("user_id"); // Get user ID from localStorage
+            if (!userId) {
+                alert("User not logged in. Please log in to send complaints.");
+                setIsLoading(false);
+                return;
+            }
+
+            await axios.post(`${backendURL}/send-email`, emailData, {
+                headers: {
+                    'User-Id': userId  // Pass user ID in headers
+                }
+            });
+
             alert('Email sent successfully to the municipal corporation.');
             setFile(null); // Reset file input
             setPreview(''); // Clear the preview image

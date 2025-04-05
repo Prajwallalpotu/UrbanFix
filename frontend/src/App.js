@@ -9,6 +9,7 @@ import CreateProfile from './pages/CreateProfile';
 import EditProfile from './pages/EditProfile';
 import axios from 'axios';
 import './App.css';
+import Track from './pages/Track';
 
 const PrivateRoute = ({ children }) => {
     const userId = localStorage.getItem("user_id");
@@ -54,6 +55,14 @@ function App() {
                     element={
                         <PrivateRoute>
                             <EditProfile />
+                        </PrivateRoute>
+                    }
+                />
+                <Route 
+                    path="/track"
+                    element={
+                        <PrivateRoute>
+                            <Track />
                         </PrivateRoute>
                     }
                 />

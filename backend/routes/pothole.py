@@ -8,6 +8,9 @@ import base64
 from utils.detection import infer_on_image
 from utils.email import send_email
 from config import UPLOAD_DIR
+from bson.objectid import ObjectId  # Add this import
+from datetime import datetime  # Add this import
+from database import users_collection  # Import users_collection from database.py
 
 pothole_bp = Blueprint('pothole', __name__)
 logger = logging.getLogger(__name__)
@@ -93,7 +96,12 @@ def send_email_endpoint():
         latitude = data.get('latitude', 'Unknown')
         longitude = data.get('longitude', 'Unknown')
         image_id = data.get('imageId', '')
+        user_id = request.headers.get('User-Id')  # Get user ID from headers
 
+        if not user_id:
+            return jsonify({"error": "User ID is required"}), 400
+
+        # Fetch the processed image path
         if not image_id:
             processed_files = [f for f in os.listdir(UPLOAD_DIR) if f.startswith('processed_')]
             if processed_files:
@@ -108,11 +116,29 @@ def send_email_endpoint():
             else:
                 return jsonify({"error": "No processed image found"}), 400
         
+        # Send email
         result = send_email(image_path, message, latitude, longitude)
-        
         if "error" in result:
             return jsonify(result), 500
-        return jsonify(result)
+
+        # Store complaint in the database
+        complaint_id = str(uuid.uuid4())
+        complaint_data = {
+            "complaint_id": complaint_id,
+            "image_path": image_path,
+            "latitude": latitude,
+            "longitude": longitude,
+            "message": message,
+            "timestamp": datetime.utcnow()
+        }
+
+        users_collection.update_one(
+            {"user_id": user_id},
+            {"$push": {"complaints": complaint_data}},
+            upsert=True
+        )
+
+        return jsonify({"success": True, "message": "Email sent and complaint logged successfully", "complaint_id": complaint_id})
         
     except Exception as e:
         logger.error(f"Error sending email: {e}", exc_info=True)

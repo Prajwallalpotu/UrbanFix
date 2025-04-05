@@ -28,13 +28,14 @@ const Profile = () => {
             <div className="profile-container">
                 {profile ? (
                     <>
-                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center",position: "relative" }}>
                             <h2>Welcome, {profile.name}</h2>
                             <EditIcon
-                                sx={{ cursor: "pointer", color: "#007bff" }}
+                                sx={{ cursor: "pointer", color: "#007bff", position: "absolute", right: 5,top: 0, ":hover": { color: "#0056b3" } }}
                                 onClick={() => window.location.href = "/edit-profile"}
                             />
                         </Box>
+                        
                         <p><strong>Email:</strong> {profile.email}</p>
                         <p><strong>User ID:</strong> {profile.user_id}</p>
                         <p><strong>Role:</strong> {profile.role}</p>
