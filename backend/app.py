@@ -34,9 +34,13 @@ def serve(path):
     if path.startswith("api"):
         return jsonify({"error": "Not Found"}), 404
     try:
-        return app.send_static_file(path)
-    except:
-        return app.send_static_file('index.html')
+        # Ensure valid user IDs are not treated as static file paths
+        if os.path.exists(os.path.join(app.static_folder, path)) and not path.startswith("a942d519"):
+            return send_from_directory(app.static_folder, path)
+        return send_from_directory(app.static_folder, 'index.html')  # Serve React app for valid routes
+    except Exception as e:
+        logger.error(f"Error serving path {path}: {e}")
+        return send_from_directory(app.static_folder, 'index.html')
 
 if __name__ == '__main__':
     build_dir = 'pothole-detection/build'

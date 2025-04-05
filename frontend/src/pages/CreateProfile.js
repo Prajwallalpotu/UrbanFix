@@ -17,6 +17,7 @@ const CreateProfile = () => {
         e.preventDefault();
         setErrorMsg("");
         setSuccessMsg("");
+        console.log(backendURL);
 
         if (!name || !email || !password) {
             setErrorMsg("All fields are required.");

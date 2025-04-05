@@ -22,14 +22,14 @@ const PrivateRoute = ({ children }) => {
         if (!userId) {
             setValid(false);
         } else {
-            axios.get(`${backendURL}/${userId}`)
+            axios.get(`${backendURL}/user/profile/${userId}`) // Correct endpoint for user profile
                 .then(() => setValid(true))
                 .catch(() => {
                     localStorage.removeItem("user_id");
                     setValid(false);
                 });
         }
-    }, []);
+    }, [userId]);
 
     if (valid === null) return <div>Loading...</div>;
     return valid ? children : <Navigate to="/login" />;
