@@ -4,38 +4,39 @@ import { useNavigate, Link } from "react-router-dom";
 import { TextField, Button, Container, Typography, Box, Alert } from "@mui/material";
 
 const Login = () => {
-    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [errorMsg, setErrorMsg] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => {
         const userId = localStorage.getItem("user_id");
-        if (userId) {
+    
+        if (userId && userId !== "admin") {
+            axios.get(`http://localhost:5001/user/profile/${userId}`)
+                .then(() => navigate("/profile"))
+                .catch(() => {
+                    // Invalid user_id, remove and stay on login
+                    localStorage.removeItem("user_id");
+                });
+        } else if (userId === "admin") {
             navigate("/profile");
         }
     }, [navigate]);
+    
 
     const login = async () => {
-        if (!username || !password) {
+        if (!email || !password) {
             setErrorMsg("Please fill in all fields.");
             return;
         }
 
-        // Hardcoded admin login
-        if (username === "admin" && password === "admin") {
-            localStorage.setItem("user_id", "admin");
-            navigate("/profile");
-            return;
-        }
-
-        // Normal login via backend
         try {
-            const res = await axios.post("http://localhost:5001/auth/login", { username, password });
+            const res = await axios.post("http://localhost:5001/auth/login", { email, password });
             localStorage.setItem("user_id", res.data.user_id);
             navigate("/profile");
         } catch (error) {
-            setErrorMsg("Invalid username or password.");
+            setErrorMsg("Invalid email or password.");
         }
     };
 
@@ -49,10 +50,11 @@ const Login = () => {
                 <TextField
                     fullWidth
                     margin="normal"
-                    label="Username"
+                    type="email"
+                    label="Email"
                     variant="outlined"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                 />
                 <TextField
                     fullWidth

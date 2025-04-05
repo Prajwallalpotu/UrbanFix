@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes , Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Upload from './pages/Upload';
@@ -6,12 +6,31 @@ import Home from './pages/Home';
 import NotFound from './pages/404';
 import Profile from './pages/Profile';
 import CreateProfile from './pages/CreateProfile';
+import EditProfile from './pages/EditProfile';
+import axios from 'axios';
 import './App.css';
 
 const PrivateRoute = ({ children }) => {
     const userId = localStorage.getItem("user_id");
-    return userId ? children : <Navigate to="/login" />;
+
+    const [valid, setValid] = useState(null);
+    useEffect(() => {
+        if (!userId) {
+            setValid(false);
+        } else {
+            axios.get(`http://localhost:5001/user/profile/${userId}`)
+                .then(() => setValid(true))
+                .catch(() => {
+                    localStorage.removeItem("user_id");
+                    setValid(false);
+                });
+        }
+    }, []);
+
+    if (valid === null) return <div>Loading...</div>;
+    return valid ? children : <Navigate to="/login" />;
 };
+
 
 function App() {
     return (
@@ -28,10 +47,13 @@ function App() {
                     }
                 />
                 <Route
-                    path="/create-profile"
+                    path="/create-profile" element={<CreateProfile />}
+                />
+                <Route
+                    path="/edit-profile"
                     element={
                         <PrivateRoute>
-                            <CreateProfile />
+                            <EditProfile />
                         </PrivateRoute>
                     }
                 />

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Layout from "../components/Layout";
+import EditIcon from "@mui/icons-material/Edit";
+import Box from "@mui/material/Box";
 
 const Profile = () => {
     const [profile, setProfile] = useState(null);
@@ -26,7 +28,14 @@ const Profile = () => {
             <div className="profile-container">
                 {profile ? (
                     <>
-                        <h2>Welcome, {profile.name}</h2>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <h2>Welcome, {profile.name}</h2>
+                            <EditIcon
+                                sx={{ cursor: "pointer", color: "#007bff" }}
+                                onClick={() => window.location.href = "/edit-profile"}
+                            />
+                        </Box>
+                        <p><strong>Email:</strong> {profile.email}</p>
                         <p><strong>User ID:</strong> {profile.user_id}</p>
                         <p><strong>Role:</strong> {profile.role}</p>
                         <button 

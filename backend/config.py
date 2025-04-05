@@ -19,6 +19,7 @@ class Config:
     DB_NAME = "UrbanFix"
     client = MongoClient(MONGO_URI)
     db = client[DB_NAME]
+    users_collection = db["Users"]  # Ensure Users collection is initialized
 
 # Ensure UPLOAD_DIR is accessible at the module level
 UPLOAD_DIR = Config.UPLOAD_DIR

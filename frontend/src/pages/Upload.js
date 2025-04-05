@@ -150,7 +150,7 @@ const Upload = () => {
                 
                 {preview && (
                     <Box sx={{ mt: 3, textAlign: 'center' }}>
-                        <img src={preview} alt="Image Preview" style={{ maxWidth: '100%', maxHeight: 300 }} />
+                        <img src={preview} alt="preview" style={{ maxWidth: '100%', maxHeight: 300 }} />
                     </Box>
                 )}
                 
