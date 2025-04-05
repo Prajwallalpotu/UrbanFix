@@ -1,7 +1,9 @@
 import unittest
 import requests
 
-BASE_URL = "http://localhost:5001"
+import os
+
+BASE_URL = os.getenv("BASE_URL")
 
 class FunctionalTests(unittest.TestCase):
 

@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { TextField, Button, Container, Typography, Box, Alert } from "@mui/material";
 import axios from "axios";
 
-const backendURL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5001';
+const backendURL = process.env.REACT_APP_BACKEND_URL ;
 
 const CreateProfile = () => {
     const [name, setName] = useState("");

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Box, Typography, Paper, Stepper, Step, StepLabel, CircularProgress } from '@mui/material';
 import Layout from '../components/Layout';
 
-const backendURL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5001';
+const backendURL = process.env.REACT_APP_BACKEND_URL ;
 
 function Track() {
     const [complaints, setComplaints] = useState([]);

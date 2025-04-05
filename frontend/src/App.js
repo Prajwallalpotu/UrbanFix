@@ -11,15 +11,18 @@ import axios from 'axios';
 import './App.css';
 import Track from './pages/Track';
 
+const backendURL = process.env.REACT_APP_BACKEND_URL
+
 const PrivateRoute = ({ children }) => {
     const userId = localStorage.getItem("user_id");
 
     const [valid, setValid] = useState(null);
+
     useEffect(() => {
         if (!userId) {
             setValid(false);
         } else {
-            axios.get(`http://localhost:5001/user/profile/${userId}`)
+            axios.get(`${backendURL}/${userId}`)
                 .then(() => setValid(true))
                 .catch(() => {
                     localStorage.removeItem("user_id");
