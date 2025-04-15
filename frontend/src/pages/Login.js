@@ -40,6 +40,7 @@ const Login = () => {
         } catch (error) {
             setErrorMsg("Invalid email or password.");
         }
+        
     };
 
     return (
