@@ -8,12 +8,12 @@ BASE_URL = os.getenv("BASE_URL")
 class FunctionalTests(unittest.TestCase):
 
     def test_login(self):
-        response = requests.post(f"{BASE_URL}/auth/login", json={"username": "admin", "password": "admin"})
+        response = requests.post(f"{BASE_URL}/auth/login", json={"email": "admin@example.com", "password": "admin"})
         self.assertEqual(response.status_code, 200)
         self.assertIn("user_id", response.json())
 
     def test_get_profile(self):
-        user_id = "67dc64eddf25608bb0abdf49"
+        user_id = "admin"  # Use "admin" as the test user ID
         response = requests.get(f"{BASE_URL}/user/profile/{user_id}")
         self.assertEqual(response.status_code, 200)
         self.assertIn("user_id", response.json())

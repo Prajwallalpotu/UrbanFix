@@ -2,6 +2,10 @@ import unittest
 import requests
 import time
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 BASE_URL = os.getenv("BASE_URL")
 
@@ -9,7 +13,7 @@ class PerformanceTests(unittest.TestCase):
 
     def test_login_performance(self):
         start_time = time.time()
-        response = requests.post(f"{BASE_URL}/auth/login", json={"username": "admin", "password": "admin"})
+        response = requests.post(f"{BASE_URL}/auth/login", json={"email": "admin@example.com", "password": "admin"})
         end_time = time.time()
         self.assertEqual(response.status_code, 200)
         self.assertLess(end_time - start_time, 1)  # Response time should be less than 1 second

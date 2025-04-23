@@ -10,7 +10,7 @@ users_collection = Config.db["Users"]
 @auth_bp.route("/auth/login", methods=["POST"])
 def login():
     data = request.json
-    email = data.get("email")
+    email = data.get("email") or data.get("username")  # Support both "email" and "username" for admin
     password = data.get("password")
 
     # Allow admin login without DB check
@@ -22,13 +22,13 @@ def login():
         user = users_collection.find_one({"email": email})
         if not user:
             return jsonify({"message": "User not found"}), 401
+
+        if check_password_hash(user["password"], password):
+            return jsonify({"message": "Login successful", "user_id": user["user_id"]}), 200
+        else:
+            return jsonify({"message": "Invalid email or password"}), 401
     except Exception as e:
         return jsonify({"message": "Database error", "error": str(e)}), 500
-
-    if user and check_password_hash(user["password"], password):
-        return jsonify({"message": "Login successful", "user_id": user["user_id"]}), 200
-    else:
-        return jsonify({"message": "Invalid email or password"}), 401
 
 @auth_bp.route("/auth/register", methods=["POST"])
 def register():

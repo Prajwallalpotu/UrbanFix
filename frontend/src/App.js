@@ -10,6 +10,7 @@ import EditProfile from './pages/EditProfile';
 import axios from 'axios';
 import './App.css';
 import Track from './pages/Track';
+import Map from './pages/Map';
 
 const backendURL = process.env.REACT_APP_BACKEND_URL
 
@@ -66,6 +67,14 @@ function App() {
                     element={
                         <PrivateRoute>
                             <Track />
+                        </PrivateRoute>
+                    }
+                />
+                <Route 
+                    path="/map"
+                    element={
+                        <PrivateRoute>
+                            <Map />
                         </PrivateRoute>
                     }
                 />

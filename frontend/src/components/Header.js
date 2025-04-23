@@ -60,6 +60,9 @@ return (
             <Button color="inherit" href="/profile">
                 Profile
             </Button>
+            <Button color="inherit" href="/map">
+                View Map
+            </Button>
         </Box>
 
         <Drawer
@@ -95,6 +98,9 @@ return (
             </Button>
             <Button color="inherit" onClick={toggleMenu} href="/profile">
                 Profile
+            </Button>
+            <Button color="inherit" onClick={toggleMenu} href="/map">
+                View Map
             </Button>
         </Box>
         </Drawer>
