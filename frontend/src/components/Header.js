@@ -54,14 +54,14 @@ return (
             <Button color="inherit" href="/upload">
                 Report Pothole
             </Button>
+            <Button color="inherit" href="/map">
+                View Map
+            </Button>
             <Button color="inherit" href="/track">
                 Track Report
             </Button>
             <Button color="inherit" href="/profile">
                 Profile
-            </Button>
-            <Button color="inherit" href="/map">
-                View Map
             </Button>
         </Box>
 
@@ -93,14 +93,14 @@ return (
             <Button color="inherit" onClick={toggleMenu} href="/upload">
                 Report Pothole
             </Button>
+            <Button color="inherit" onClick={toggleMenu} href="/map">
+                View Map
+            </Button>
             <Button color="inherit" onClick={toggleMenu} href="/track">
                 Track Report
             </Button>
             <Button color="inherit" onClick={toggleMenu} href="/profile">
                 Profile
-            </Button>
-            <Button color="inherit" onClick={toggleMenu} href="/map">
-                View Map
             </Button>
         </Box>
         </Drawer>

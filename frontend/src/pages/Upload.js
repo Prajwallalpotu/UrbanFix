@@ -1,12 +1,34 @@
-// --- START OF FILE Upload.js ---
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Box, Button, TextField, Typography, Alert } from '@mui/material';
+import { 
+  Box, 
+  Button, 
+  TextField, 
+  Typography, 
+  Alert, 
+  Paper,
+  CircularProgress,
+  Stepper,
+  Step,
+  StepLabel,
+  Card,
+  CardContent,
+  Divider,
+  IconButton,
+  Chip,
+  Tooltip
+} from '@mui/material';
 import Layout from '../components/Layout';
+import AddAPhotoIcon from '@mui/icons-material/AddAPhoto';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import SendIcon from '@mui/icons-material/Send';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import DeleteIcon from '@mui/icons-material/Delete';
+import PhotoIcon from '@mui/icons-material/Photo';
+import ReportProblemIcon from '@mui/icons-material/ReportProblem';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
-// Make sure REACT_APP_BACKEND_URL is correctly set in your .env file
-const backendURL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5001'; // Provide a default
+const backendURL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5001';
 
 const Upload = () => {
     const [file, setFile] = useState(null);
@@ -17,22 +39,36 @@ const Upload = () => {
     const [message, setMessage] = useState('');
     const [potholesDetected, setPotholesDetected] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [processedImagePath, setProcessedImagePath] = useState(''); // Store path for potential future use
+    const [activeStep, setActiveStep] = useState(0);
+    const [detectedSeverity, setDetectedSeverity] = useState('Unknown');
+    const [processedImagePath, setProcessedImagePath] = useState('');
+    const [locationReady, setLocationReady] = useState(false);
+    
+    const fileInputRef = useRef(null);
+    
+    const steps = ['Take Photo', 'Detect Potholes', 'Submit Report'];
+    
+    const severityColors = {
+        'Severe': '#d32f2f',
+        'Moderate': '#ff9800',
+        'Minor': '#ffc107',
+        'Unknown': '#757575'
+    };
 
     useEffect(() => {
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                setLatitude(position.coords.latitude);
-                setLongitude(position.coords.longitude);
+                setLatitude(position.coords.latitude.toFixed(6));
+                setLongitude(position.coords.longitude.toFixed(6));
+                setLocationReady(true);
             },
             (error) => {
                 console.error("Error fetching location: ", error);
-                // Don't use alert, show message in UI
-                setStatus(`Error fetching location: ${error.message}. Using defaults.`);
+                setStatus(`Location unavailable: ${error.message}`);
                 setLatitude("Unavailable");
                 setLongitude("Unavailable");
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 } // Add timeout and maximumAge
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
         );
     }, []);
 
@@ -45,32 +81,43 @@ const Upload = () => {
                 setPreview(e.target.result);
             };
             reader.readAsDataURL(selectedFile);
-            // Reset status and detection state
             setPotholesDetected(false);
             setStatus('');
-            setMessage(''); // Also clear message field
-            setProcessedImagePath(''); // Clear stored path
+            setMessage('');
+            setProcessedImagePath('');
+            setActiveStep(1);
         } else {
-            // Handle case where user cancels file selection
             setFile(null);
             setPreview('');
-            setStatus('File selection cancelled.');
+        }
+    };
+
+    const triggerFileInput = () => {
+        fileInputRef.current.click();
+    };
+
+    const clearImage = () => {
+        setFile(null);
+        setPreview('');
+        setStatus('');
+        setPotholesDetected(false);
+        setProcessedImagePath('');
+        setActiveStep(0);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
         }
     };
 
     const uploadImage = async () => {
         if (!file) {
-            setStatus('Please choose an image file to upload.');
+            setStatus('Please choose an image file');
             return;
         }
 
-        // Check if location is available
         if (latitude === 'Fetching...' || latitude === 'Unavailable') {
-            setStatus('Waiting for location data... Please ensure location services are enabled.');
-            // Optionally try fetching location again here or prompt user
-            return; // Prevent upload without location if it's required
+            setStatus('Waiting for location data. Please ensure location services are enabled.');
+            return;
         }
-
 
         const formData = new FormData();
         formData.append('file', file);
@@ -79,56 +126,49 @@ const Upload = () => {
 
         setStatus('Processing image...');
         setIsLoading(true);
-        setPreview(''); // Clear previous preview while processing
-        setPotholesDetected(false); // Reset detection status
 
         try {
-            console.log('Uploading file:', file.name, 'Size:', file.size);
-            console.log('Sending to URL:', `${backendURL}/detect`);
-
             const response = await axios.post(`${backendURL}/detect`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 },
-                timeout: 60000 // Add timeout for potentially long inference
+                timeout: 60000
             });
 
             const detectionData = response.data;
-            console.log('Detection result:', detectionData);
-
-            // Update preview with the processed image from the backend
             setPreview(detectionData.imageUrl);
-            setProcessedImagePath(detectionData.processedImagePath); // Store the path
+            setProcessedImagePath(detectionData.processedImagePath);
 
             if (detectionData.potholesDetected) {
+                const severityCounts = detectionData.severityCounts || {};
+                if (severityCounts.Severe > 0) {
+                    setDetectedSeverity('Severe');
+                } else if (severityCounts.Moderate > 0) {
+                    setDetectedSeverity('Moderate');
+                } else if (severityCounts.Minor > 0) {
+                    setDetectedSeverity('Minor');
+                }
                 setPotholesDetected(true);
-                // Use the detailed message from the backend
-                setStatus(detectionData.message + ' You can now report this.');
+                setStatus('Potholes detected! You can now submit a report.');
+                setActiveStep(2);
             } else {
+                setStatus('No potholes detected in this image.');
                 setPotholesDetected(false);
-                setStatus(detectionData.message || 'No potholes found.'); // Use backend message or default
             }
         } catch (error) {
             console.error('Error during pothole detection:', error);
-            let errorMessage = 'Error detecting pothole: ';
+            let errorMessage = 'Detection failed: ';
+            
             if (error.response) {
-                // The request was made and the server responded with a status code
-                // that falls out of the range of 2xx
-                console.error('Error response data:', error.response.data);
-                console.error('Error response status:', error.response.status);
-                errorMessage += error.response.data?.error || `Server responded with status ${error.response.status}`;
+                errorMessage += error.response.data?.error || `Server error (${error.response.status})`;
             } else if (error.request) {
-                // The request was made but no response was received
-                console.error('Error request:', error.request);
-                errorMessage += 'No response received from server. Check network or backend status.';
+                errorMessage += 'No response from server. Check your connection.';
             } else {
-                // Something happened in setting up the request that triggered an Error
-                console.error('Error message:', error.message);
                 errorMessage += error.message;
             }
+            
             setStatus(errorMessage);
             setPotholesDetected(false);
-            setPreview(''); // Clear preview on error
         } finally {
             setIsLoading(false);
         }
@@ -136,69 +176,67 @@ const Upload = () => {
 
     const sendEmail = async () => {
         if (!message) {
-            setStatus('Please write a message before sending the email.'); // Use setStatus for feedback
+            setStatus('Please write a message before sending');
             return;
         }
+        
         if (!potholesDetected) {
-            setStatus('Cannot send report: No potholes were detected in the last analysis.');
+            setStatus('Cannot send report: No potholes were detected');
             return;
         }
 
         setIsLoading(true);
-        setStatus('Sending report...'); // Update status
+        setStatus('Sending report...');
 
-        // NOTE: Using imageId like Date.now() is unreliable if you need the *specific* image.
-        // The backend currently finds the *latest* processed image.
-        // A robust solution would pass `processedImagePath` from `uploadImage` state here.
-        // For simplicity, we keep the current flow, but acknowledge the backend's limitation.
         const emailData = {
             message,
             latitude,
             longitude,
-            // imageId: processedImagePath || Date.now().toString() // Consider passing the actual path if needed robustly
-            imageId: Date.now().toString() // Keep existing logic for now
+            date: new Date().toISOString(),
+            severity: detectedSeverity,
+            imageId: Date.now().toString()
         };
 
         try {
             const userId = localStorage.getItem("user_id");
             if (!userId) {
-                setStatus("User not logged in. Please log in to send complaints."); // Use setStatus
+                setStatus("Please log in to send complaints");
                 setIsLoading(false);
                 return;
             }
 
-            console.log('Sending email data:', emailData);
-            console.log('Sending to URL:', `${backendURL}/send-email`);
-
             await axios.post(`${backendURL}/send-email`, emailData, {
                 headers: {
                     'User-Id': userId,
-                    'Content-Type': 'application/json' // Ensure correct content type
+                    'Content-Type': 'application/json'
                 },
-                timeout: 30000 // Add timeout for email sending
+                timeout: 30000
             });
 
-            setStatus('Report sent successfully to the municipal corporation.'); // Use setStatus
-            // Reset form after successful send
+            setStatus('Report sent successfully!');
             setFile(null);
             setPreview('');
             setMessage('');
             setPotholesDetected(false);
             setProcessedImagePath('');
-            // Clear the file input visually (optional, requires useRef)
-            // e.g., fileInputRef.current.value = null;
+            setActiveStep(0);
+            
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
         } catch (error) {
             console.error('Error sending email:', error);
-            let errorMessage = 'Error sending report: ';
+            let errorMessage = 'Report sending failed: ';
+            
             if (error.response) {
-                console.error('Error response data:', error.response.data);
-                errorMessage += error.response.data?.error || `Server responded with status ${error.response.status}`;
+                errorMessage += error.response.data?.error || `Server error (${error.response.status})`;
             } else if (error.request) {
-                errorMessage += 'No response received from server.';
+                errorMessage += 'No response from server';
             } else {
                 errorMessage += error.message;
             }
-            setStatus(errorMessage); // Use setStatus for error feedback
+            
+            setStatus(errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -206,105 +244,334 @@ const Upload = () => {
 
     return (
         <Layout>
-            <Box sx={{ maxWidth: 600, mx: 'auto', p: 3, border: '1px solid #ccc', borderRadius: 2, boxShadow: 3 }}>
-                <Typography variant="h4" component="h1" sx={{ mb: 3, textAlign: 'center' }}>
-                    Pothole Detection & Reporting
-                </Typography>
-
-                {/* Location Display */}
-                <Box sx={{ mb: 2, p: 1, border: '1px dashed grey', borderRadius: 1, textAlign: 'center' }}>
-                    <Typography variant="body2" component="div">
-                        Location: Lat: <span id="latitude" style={{ fontWeight: 'bold' }}>{latitude}</span>, Long: <span id="longitude" style={{ fontWeight: 'bold' }}>{longitude}</span>
-                    </Typography>
-                    {latitude === 'Fetching...' && <Typography variant="caption" color="textSecondary">Getting location...</Typography>}
-                    {latitude === 'Unavailable' && <Typography variant="caption" color="error">Location unavailable. Reporting may be less effective.</Typography>}
-                </Box>
-
-                {/* File Input */}
-                <TextField
-                    type="file"
-                    // accept="image/*" // Standard images
-                    accept="image/jpeg, image/png, image/webp" // Be more specific if needed
-                    capture="environment" // Prioritize back camera on mobile
-                    onChange={handleFileChange}
-                    fullWidth
-                    required
-                    sx={{ mb: 2 }}
-                    InputLabelProps={{ shrink: true }} // Keep label floated
-                    label="Select Pothole Image"
-                    // inputRef={fileInputRef} // Add ref if needed to clear input visually
-                />
-
-                {/* Detect Button */}
-                <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={uploadImage}
-                    fullWidth
-                    disabled={isLoading || !file || latitude === 'Fetching...'} // Disable if loading, no file, or still fetching location
-                    sx={{ mb: 2 }}
+            <Box sx={{ 
+                maxWidth: 800, 
+                mx: 'auto', 
+                p: { xs: 2, sm: 4 }, 
+                mb: 4
+            }}>
+                <Paper 
+                    elevation={3} 
+                    sx={{ 
+                        p: { xs: 2, sm: 4 }, 
+                        borderRadius: 2,
+                        background: 'linear-gradient(to bottom, #ffffff, #f7f9fc)'
+                    }}
                 >
-                    {isLoading ? 'Processing...' : (file ? 'Detect Potholes' : 'Select Image First')}
-                </Button>
-
-                {/* Preview Image */}
-                {preview && (
-                    <Box sx={{ mt: 2, mb: 2, textAlign: 'center', border: '1px solid lightgrey', padding: '5px' }}>
-                        <Typography variant="caption" display="block" gutterBottom>Image Preview / Detection Result</Typography>
-                        <img src={preview} alt="Pothole Preview" style={{ maxWidth: '100%', maxHeight: 300, display: 'block', margin: 'auto' }} />
-                    </Box>
-                )}
-
-                {/* Status Message */}
-                {status && (
-                    <Alert
-                        severity={
-                            status.includes('Error') || status.includes('failed') || status.includes('unavailable') ? "error" :
-                            status.includes('No potholes') ? "info" :
-                            status.includes('detected') || status.includes('Report sent') ? "success" : // Mark detection/sent as success
-                            status.includes('Processing') || status.includes('Sending') || status.includes('Waiting') ? "info" :
-                            "warning" // Default for other messages like 'write a message'
-                        }
-                        sx={{ mt: 2 }}
+                    <Typography 
+                        variant="h4" 
+                        component="h1" 
+                        sx={{ 
+                            mb: 3, 
+                            textAlign: 'center', 
+                            color: '#1a237e',
+                            fontWeight: 600
+                        }}
                     >
-                        {status}
-                    </Alert>
-                )}
+                        Pothole Reporter
+                    </Typography>
+                    
+                    <Stepper 
+                        activeStep={activeStep} 
+                        alternativeLabel 
+                        sx={{ mb: 4 }}
+                    >
+                        {steps.map((label) => (
+                            <Step key={label}>
+                                <StepLabel>{label}</StepLabel>
+                            </Step>
+                        ))}
+                    </Stepper>
 
+                    {/* Location Card */}
+                    <Card variant="outlined" sx={{ mb: 4, bgcolor: '#f9f9f9' }}>
+                        <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <LocationOnIcon 
+                                color={locationReady ? "success" : "action"} 
+                                fontSize="large" 
+                            />
+                            <Box>
+                                <Typography variant="subtitle1" fontWeight="medium">
+                                    Your Location
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Latitude: <strong>{latitude}</strong>, Longitude: <strong>{longitude}</strong>
+                                </Typography>
+                                {latitude === 'Fetching...' && (
+                                    <Typography variant="caption" color="text.secondary">
+                                        Getting your location...
+                                    </Typography>
+                                )}
+                                {latitude === 'Unavailable' && (
+                                    <Typography variant="caption" color="error">
+                                        Location unavailable. Please enable location services.
+                                    </Typography>
+                                )}
+                            </Box>
+                        </CardContent>
+                    </Card>
 
-                {/* Reporting Section */}
-                {potholesDetected && (
-                    <Box sx={{ mt: 3, p: 2, border: '1px solid blue', borderRadius: 1 }}>
-                        <Typography variant="h6" sx={{ mb: 1 }}>
-                            Report to Municipal Corporation
-                        </Typography>
-                        <TextField
-                            label="Your Message"
-                            multiline
-                            rows={4}
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                            fullWidth
-                            variant="outlined"
-                            sx={{ mb: 2 }}
-                            placeholder="Describe the pothole condition, location accuracy, or any additional details..."
-                        />
-                        <Button
-                            variant="contained"
-                            color="secondary"
-                            onClick={sendEmail}
-                            fullWidth
-                            disabled={isLoading || !message} // Disable if loading or no message
+                    {/* Step 1: Take Photo */}
+                    {activeStep === 0 && (
+                        <Box sx={{ textAlign: 'center', py: 3 }}>
+                            <input
+                                type="file"
+                                accept="image/jpeg, image/png, image/webp"
+                                capture="environment"
+                                onChange={handleFileChange}
+                                ref={fileInputRef}
+                                style={{ display: 'none' }}
+                            />
+                            
+                            <Box 
+                                sx={{ 
+                                    display: 'flex', 
+                                    flexDirection: 'column', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    gap: 2,
+                                    bgcolor: '#f5f7fa',
+                                    border: '2px dashed #bdbdbd',
+                                    borderRadius: 2,
+                                    p: 4,
+                                    cursor: 'pointer',
+                                    '&:hover': {
+                                        bgcolor: '#e8f0fe',
+                                        borderColor: '#2196f3'
+                                    }
+                                }}
+                                onClick={triggerFileInput}
+                            >
+                                <CameraAltIcon sx={{ fontSize: 60, color: '#1976d2' }} />
+                                <Typography variant="h6">
+                                    Take a Photo or Select Image
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Capture a clear image of the pothole
+                                </Typography>
+                            </Box>
+
+                            <Typography variant="caption" sx={{ display: 'block', mt: 2, color: 'text.secondary' }}>
+                                Make sure the pothole is clearly visible in the image
+                            </Typography>
+                        </Box>
+                    )}
+
+                    {/* Steps 1-2: Image Preview & Detection */}
+                    {(activeStep === 1 || activeStep === 2) && (
+                        <>
+                            {/* Image Preview Section */}
+                            <Box sx={{ mb: 3 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                    <Typography variant="h6">
+                                        {potholesDetected ? 'Detection Results' : 'Image Preview'}
+                                    </Typography>
+                                    <IconButton 
+                                        color="error" 
+                                        onClick={clearImage}
+                                        size="small"
+                                        sx={{
+                                            height: 36,
+                                            width: 36,
+                                            '&:hover': {
+                                                bgcolor: '#f44336',
+                                                color: 'white'
+                                            }
+                                        }}
+                                    >
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </Box>
+                                
+                                <Box 
+                                    sx={{ 
+                                        position: 'relative',
+                                        height: '100%',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    {preview && (
+                                        <img 
+                                            src={preview} 
+                                            alt="Pothole" 
+                                            style={{ 
+                                                maxWidth: '100%', 
+                                                maxHeight: 300, 
+                                                objectFit: 'contain'
+                                            }} 
+                                        />
+                                    )}
+                                    
+                                    {potholesDetected && (
+                                        <Box 
+                                            sx={{ 
+                                                position: 'absolute', 
+                                                top: 10, 
+                                                right: 10 
+                                            }}
+                                        >
+                                            <Chip 
+                                                icon={<ReportProblemIcon />} 
+                                                label={`${detectedSeverity} Pothole`}
+                                                sx={{ 
+                                                    bgcolor: severityColors[detectedSeverity] || '#757575',
+                                                    color: 'white',
+                                                    fontWeight: 'bold'
+                                                }}
+                                            />
+                                        </Box>
+                                    )}
+                                </Box>
+                            </Box>
+
+                            {/* Step 1: Detect Button */}
+                            {activeStep === 1 && (
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={uploadImage}
+                                    fullWidth
+                                    disabled={isLoading || !file || latitude === 'Fetching...'}
+                                    sx={{ 
+                                        py: 1,
+                                        fontSize: '1rem',
+                                        fontWeight: 'medium',
+                                        boxShadow: 2,
+                                        '&:hover': {
+                                            boxShadow: 4
+                                        }
+                                    }}
+                                    startIcon={<PhotoIcon />}
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <CircularProgress size={24} color="inherit" sx={{ mr: 1 }} />
+                                            Processing...
+                                        </>
+                                    ) : 'Detect Potholes'}
+                                </Button>
+                            )}
+                        </>
+                    )}
+
+                    {/* Status Message */}
+                    {status && (
+                        <Alert
+                            severity={
+                                status.includes('Error') || status.includes('failed') ? "error" :
+                                status.includes('No potholes') ? "info" :
+                                status.includes('detected') || status.includes('sent success') ? "success" :
+                                status.includes('Processing') || status.includes('Sending') ? "info" :
+                                "warning"
+                            }
+                            sx={{ mt: 3, mb: 2 }}
+                            variant="filled"
                         >
-                        {isLoading ? 'Sending...' : 'Send Report Email'}
-                        </Button>
+                            {status}
+                        </Alert>
+                    )}
+
+                    {/* Step 3: Reporting Section */}
+                    {activeStep === 2 && potholesDetected && (
+                        <Box sx={{ mt: 3 }}>
+                            <Divider sx={{ mb: 3 }} />
+                            
+                            <Typography variant="h6" gutterBottom>
+                                Submit Complaint
+                            </Typography>
+                            
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                Your report will be sent to the municipal corporation of your area.
+                            </Typography>
+                            
+                            <TextField
+                                label="Description"
+                                multiline
+                                rows={4}
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                fullWidth
+                                variant="outlined"
+                                sx={{ mb: 3 }}
+                                placeholder="Describe the pothole condition, exact location, road name, or any additional details..."
+                            />
+                            
+                            <Button
+                                variant="contained"
+                                color="secondary"
+                                onClick={sendEmail}
+                                fullWidth
+                                disabled={isLoading || !message}
+                                sx={{ 
+                                    py: 1,
+                                    fontSize: '1rem',
+                                    fontWeight: 'medium',
+                                    boxShadow: 2,
+                                    '&:hover': {
+                                        boxShadow: 4
+                                    }
+                                }}
+                                startIcon={<SendIcon />}
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <CircularProgress size={24} color="inherit" sx={{ mr: 1 }} />
+                                        Sending...
+                                    </>
+                                ) : 'Submit Report'}
+                            </Button>
+                        </Box>
+                    )}
+                </Paper>
+                
+                {/* Instructions Card */}
+                <Paper 
+                    elevation={1} 
+                    sx={{ 
+                        mt: 3, 
+                        p: 2, 
+                        borderRadius: 2,
+                        bgcolor: '#f0f4f8'
+                    }}
+                >
+                    <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
+                        How to Report a Pothole:
+                    </Typography>
+                    
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip label="1" size="small" color="primary" />
+                            <Typography variant="body2">
+                                Take a clear photo of the pothole with your camera
+                            </Typography>
+                        </Box>
+                        
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip label="2" size="small" color="primary" />
+                            <Typography variant="body2">
+                                Let the system detect and analyze the pothole
+                            </Typography>
+                        </Box>
+                        
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip label="3" size="small" color="primary" />
+                            <Typography variant="body2">
+                                Add details about the location and pothole condition
+                            </Typography>
+                        </Box>
+                        
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip label="4" size="small" color="primary" />
+                            <Typography variant="body2">
+                                Submit your report to the municipal authorities
+                            </Typography>
+                        </Box>
                     </Box>
-                )}
+                </Paper>
             </Box>
         </Layout>
     );
 };
 
 export default Upload;
-
-// --- END OF FILE Upload.js ---

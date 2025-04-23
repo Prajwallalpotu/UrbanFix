@@ -273,6 +273,7 @@ def send_email_endpoint():
             return jsonify({"error": "No data provided"}), 400
         logger.debug(f"Received email data: {data}")
 
+        severiry = data.get('severity', 'Unknown')
         message = data.get('message', '')
         latitude = data.get('latitude', 'Unknown')
         longitude = data.get('longitude', 'Unknown')
@@ -329,7 +330,9 @@ def send_email_endpoint():
             "latitude": latitude,
             "longitude": longitude,
             "message": message,
-            "timestamp": datetime.utcnow()
+            "severity": severiry, 
+            "timestamp": datetime.utcnow(),
+            "status": "Pending" 
         }
         logger.debug(f"Preparing to log complaint data: {complaint_data}")
 
