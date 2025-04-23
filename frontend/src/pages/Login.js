@@ -1,89 +1,142 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
-import { TextField, Button, Container, Typography, Box, Alert } from "@mui/material";
+import {
+TextField,
+Button,
+Container,
+Typography,
+Box,
+Alert,
+Paper,
+} from "@mui/material";
 
 const backendURL = process.env.REACT_APP_BACKEND_URL;
 
 const Login = () => {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [errorMsg, setErrorMsg] = useState("");
-    const navigate = useNavigate();
+const [email, setEmail] = useState("");
+const [password, setPassword] = useState("");
+const [errorMsg, setErrorMsg] = useState("");
+const navigate = useNavigate();
 
-    useEffect(() => {
-        const userId = localStorage.getItem("user_id");
-    
-        if (userId && userId !== "admin") {
-            axios.get(`${backendURL}/user/profile/${userId}`)
-                .then(() => navigate("/profile"))
-                .catch(() => {
-                    // Invalid user_id, remove and stay on login
-                    localStorage.removeItem("user_id");
-                });
-        } else if (userId === "67dc64eddf25608bb0abdf49") {
-            navigate("/profile");
-        }
-    }, [navigate]);
-    
+useEffect(() => {
+    const userId = localStorage.getItem("user_id");
 
-    const login = async () => {
-        if (!email || !password) {
-            setErrorMsg("Please fill in all fields.");
-            return;
-        }
+    if (userId && userId !== "admin") {
+    axios
+        .get(`${backendURL}/user/profile/${userId}`)
+        .then(() => navigate("/profile"))
+        .catch(() => localStorage.removeItem("user_id"));
+    } else if (userId === "67dc64eddf25608bb0abdf49") {
+    navigate("/profile");
+    }
+}, [navigate]);
 
-        try {
-            const res = await axios.post(`${backendURL}/auth/login`, { email, password });
-            localStorage.setItem("user_id", res.data.user_id); // Store user_id in localStorage
-            navigate("/profile"); // Redirect to the profile page
-        } catch (error) {
-            setErrorMsg("Invalid email or password.");
-        }
-        
-    };
+const login = async () => {
+    if (!email || !password) {
+    setErrorMsg("Please fill in all fields.");
+    return;
+    }
 
-    return (
-        <Container maxWidth="xs">
-            <Box sx={{ p: 4, textAlign: "center", boxShadow: 3, borderRadius: 2, bgcolor: "#fff" }}>
-                <Typography variant="h4" gutterBottom>Login</Typography>
-                
-                {errorMsg && <Alert severity="error">{errorMsg}</Alert>}
+    try {
+    const res = await axios.post(`${backendURL}/auth/login`, {
+        email,
+        password,
+    });
+    localStorage.setItem("user_id", res.data.user_id);
+    navigate("/profile");
+    } catch (error) {
+    setErrorMsg("Invalid email or password.");
+    }
+};
 
-                <TextField
-                    fullWidth
-                    margin="normal"
-                    type="email"
-                    label="Email"
-                    variant="outlined"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                />
-                <TextField
-                    fullWidth
-                    margin="normal"
-                    type="password"
-                    label="Password"
-                    variant="outlined"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
-                <Button
-                    fullWidth
-                    variant="contained"
-                    color="primary"
-                    onClick={login}
-                    sx={{ mt: 2 }}
-                >
-                    Login
-                </Button>
+return (
+    <Box
+    sx={{
+        minHeight: "100vh",
+        minWidth: "100vw",
+        bgcolor: "#2C3E50",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        // p: 2,
+    }}
+    >
+    <Paper
+        elevation={6}
+        sx={{
+        p: 4,
+        width: "100%",
+        maxWidth: 400,
+        textAlign: "center",
+        borderRadius: 3,
+        bgcolor: "#fff",
+        }}
+    >
+        <Typography
+        variant="h4"
+        gutterBottom
+        sx={{
+            fontWeight: "bold",
+            color: "#2C3E50",
+        }}
+        >
+        UrbanFix Login
+        </Typography>
 
-                <Typography variant="body2" sx={{ mt: 2 }}>
-                    Don't have an account? <Link to="/create-profile">Create Profile</Link>
-                </Typography>
-            </Box>
-        </Container>
-    );
+        {errorMsg && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+            {errorMsg}
+        </Alert>
+        )}
+
+        <TextField
+        fullWidth
+        margin="normal"
+        type="email"
+        label="Email"
+        variant="outlined"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        />
+        <TextField
+        fullWidth
+        margin="normal"
+        type="password"
+        label="Password"
+        variant="outlined"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        />
+        <Button
+        fullWidth
+        variant="contained"
+        sx={{
+            mt: 3,
+            py: 1.2,
+            fontWeight: "bold",
+            bgcolor: "#2C3E50",
+            ":hover": {
+            bgcolor: "#1A252F",
+            },
+        }}
+        onClick={login}
+        >
+        Login
+        </Button>
+
+        <Typography variant="body2" sx={{ mt: 3 }}>
+        Don’t have an account?{" "}
+        <Link
+            to="/create-profile"
+            style={{ color: "#2C3E50", fontWeight: "bold" }}
+        >
+            Create Profile
+        </Link>
+        </Typography>
+    </Paper>
+    </Box>
+);
 };
 
 export default Login;

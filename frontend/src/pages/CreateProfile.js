@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { TextField, Button, Container, Typography, Box, Alert } from "@mui/material";
+import { TextField, Button, Typography, Box, Alert, Paper } from "@mui/material";
 import axios from "axios";
 
-const backendURL = process.env.REACT_APP_BACKEND_URL ;
+const backendURL = process.env.REACT_APP_BACKEND_URL;
 
 const CreateProfile = () => {
     const [name, setName] = useState("");
@@ -34,9 +34,37 @@ const CreateProfile = () => {
     };
 
     return (
-        <Container maxWidth="sm">
-            <Box sx={{ p: 4, textAlign: "center", boxShadow: 3, borderRadius: 2, bgcolor: "#fff" }}>
-                <Typography variant="h4" gutterBottom>Create Profile</Typography>
+        <Box
+            sx={{
+                minHeight: "100vh",
+                minWidth: "100vw",
+                bgcolor: "#2C3E50",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+            }}
+        >
+            <Paper
+                elevation={6}
+                sx={{
+                    p: 4,
+                    width: "100%",
+                    maxWidth: 400,
+                    textAlign: "center",
+                    borderRadius: 3,
+                    bgcolor: "#fff",
+                }}
+            >
+                <Typography
+                    variant="h4"
+                    gutterBottom
+                    sx={{
+                        fontWeight: "bold",
+                        color: "#2C3E50",
+                    }}
+                >
+                    UrbanFix Register
+                </Typography>
 
                 {errorMsg && <Alert severity="error" sx={{ mb: 2 }}>{errorMsg}</Alert>}
                 {successMsg && <Alert severity="success" sx={{ mb: 2 }}>{successMsg}</Alert>}
@@ -71,19 +99,32 @@ const CreateProfile = () => {
                     <Button
                         fullWidth
                         variant="contained"
-                        color="primary"
                         type="submit"
-                        sx={{ mt: 2 }}
+                        sx={{
+                            mt: 3,
+                            py: 1.2,
+                            fontWeight: "bold",
+                            bgcolor: "#2C3E50",
+                            ":hover": {
+                                bgcolor: "#1A252F",
+                            },
+                        }}
                     >
                         Create Profile
                     </Button>
                 </form>
 
-                <Typography variant="body2" sx={{ mt: 2 }}>
-                    Already have an account? <Link to="/login">Login</Link>
+                <Typography variant="body2" sx={{ mt: 3 }}>
+                    Already have an account?{" "}
+                    <Link
+                        to="/login"
+                        style={{ color: "#2C3E50", fontWeight: "bold" }}
+                    >
+                        Login
+                    </Link>
                 </Typography>
-            </Box>
-        </Container>
+            </Paper>
+        </Box>
     );
 };
 
