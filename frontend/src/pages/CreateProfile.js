@@ -11,25 +11,53 @@ const CreateProfile = () => {
     const [password, setPassword] = useState("");
     const [errorMsg, setErrorMsg] = useState("");
     const [successMsg, setSuccessMsg] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [emailError, setEmailError] = useState("");
     const navigate = useNavigate();
+
+    const validateEmail = (email) => {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setErrorMsg("");
         setSuccessMsg("");
-        console.log(backendURL);
+        setEmailError("");
 
         if (!name || !email || !password) {
             setErrorMsg("All fields are required.");
             return;
         }
 
+        if (!validateEmail(email)) {
+            setEmailError("Please enter a valid email address.");
+            return;
+        }
+
+        if (password.length < 6) {
+            setErrorMsg("Password must be at least 6 characters long.");
+            return;
+        }
+
+        setIsLoading(true);
         try {
-            const response = await axios.post(`${backendURL}/auth/register`, { name, email, password });
+            const response = await axios.post(`${backendURL}/auth/register`, { 
+                name, 
+                email, 
+                password 
+            });
             setSuccessMsg("Profile created successfully! Redirecting to login...");
-            setTimeout(() => navigate("/login"), 2000); // Redirect after 2 seconds
+            setTimeout(() => navigate("/login"), 1500);
         } catch (error) {
-            setErrorMsg(error.response?.data?.message || "Error creating profile.");
+            if (error.response?.data?.message?.includes("already registered")) {
+                setEmailError("This email is already registered. Please use a different email or login.");
+            } else {
+                setErrorMsg(error.response?.data?.message || "Error creating profile.");
+            }
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -86,6 +114,8 @@ const CreateProfile = () => {
                         variant="outlined"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        error={!!emailError}
+                        helperText={emailError}
                     />
                     <TextField
                         fullWidth
@@ -100,6 +130,7 @@ const CreateProfile = () => {
                         fullWidth
                         variant="contained"
                         type="submit"
+                        disabled={isLoading}
                         sx={{
                             mt: 3,
                             py: 1.2,
@@ -110,7 +141,7 @@ const CreateProfile = () => {
                             },
                         }}
                     >
-                        Create Profile
+                        {isLoading ? "Creating Profile..." : "Create Profile"}
                     </Button>
                 </form>
 

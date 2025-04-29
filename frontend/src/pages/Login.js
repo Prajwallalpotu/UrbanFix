@@ -17,6 +17,7 @@ const Login = () => {
 const [email, setEmail] = useState("");
 const [password, setPassword] = useState("");
 const [errorMsg, setErrorMsg] = useState("");
+const [isLoading, setIsLoading] = useState(false);
 const navigate = useNavigate();
 
 useEffect(() => {
@@ -38,6 +39,7 @@ const login = async () => {
     return;
     }
 
+    setIsLoading(true);
     try {
     const res = await axios.post(`${backendURL}/auth/login`, {
         email,
@@ -46,7 +48,9 @@ const login = async () => {
     localStorage.setItem("user_id", res.data.user_id);
     navigate("/profile");
     } catch (error) {
-    setErrorMsg("Invalid email or password.");
+    setErrorMsg(error.response?.data?.message || "Invalid email or password.");
+    } finally {
+    setIsLoading(false);
     }
 };
 
@@ -111,6 +115,7 @@ return (
         <Button
         fullWidth
         variant="contained"
+        disabled={isLoading}
         sx={{
             mt: 3,
             py: 1.2,
@@ -122,7 +127,7 @@ return (
         }}
         onClick={login}
         >
-        Login
+        {isLoading ? "Logging in..." : "Login"}
         </Button>
 
         <Typography variant="body2" sx={{ mt: 3 }}>
