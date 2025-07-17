@@ -19,7 +19,7 @@ class PerformanceTests(unittest.TestCase):
         self.assertLess(end_time - start_time, 1)  # Response time should be less than 1 second
 
     def test_detect_potholes_performance(self):
-        files = {'file': open('./uploads/temp_image_6e7627d6-8a7a-49ca-8d22-00f0e2440c20.jpg', 'rb')}
+        files = {'file': open('./uploads/temp_image_70799a2c-ed1b-42db-b1f0-c80093a34ef1.jpg', 'rb')}
         data = {'latitude': '12.9716', 'longitude': '77.5946'}
         start_time = time.time()
         response = requests.post(f"{BASE_URL}/detect", files=files, data=data)
